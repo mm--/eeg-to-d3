@@ -1,7 +1,7 @@
 {
-    "name": "EmotivTest",
+    "name": "EEG to D3",
     "version": "0.0.0",
-    "description": "Emotiv Test",
+    "description": "Take the data from the Emotive and broadcast to listening clients",
     "dependencies": {
         "socket.io": "latest",
         "express": "latest",
