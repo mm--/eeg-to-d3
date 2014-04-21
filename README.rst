@@ -12,8 +12,9 @@ Setup
 You'll need to set up a few things first.
 
 1. `python-emotiv <https://github.com/ozancaglayan/python-emotiv>`_
+   You'll need to install it using ``python setup.py install``.
 2. Node.js
-   Install packages using ``npm install``
+   Install packages required using ``npm install``
 
 
 How to run

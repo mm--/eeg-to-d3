@@ -36,12 +36,14 @@ var nchannels = 14;
 
 var alldata = d3.range(nchannels).map(function(i) {
     return({"name": i,
-	    "values": d3.range(200).map(function(x) {return(x*i);})
+	    "values": d3.range(200).map(function(x) {return(Math.sin(x * i)*i);})
 	   }); 
 } );
 
 var eeggraph;
 var color;
+var datay;
+var dataline;
 
 function graphUpdate(d) {
     var keys = Object.keys(d);
@@ -64,13 +66,13 @@ window.addEventListener('load', function() {
 	.domain([0, alldata[0].values.length - 1])
 	.range([0, w]);
 
-    var datay = d3.range(nchannels).map(function(i) {
+    datay = d3.range(nchannels).map(function(i) {
 	return(d3.scale.linear()
 	    .domain([0, 3000])
 	    .rangeRound([h/nchannels, 0]));
     });
 
-    var dataline = d3.range(nchannels).map(function(j) {
+    dataline = d3.range(nchannels).map(function(j) {
 	return(d3.svg.line()
 	.x(function(d, i) { return x(i); })
 	.y(function(d, i) { return datay[j](d); }));
@@ -98,7 +100,7 @@ window.addEventListener('load', function() {
     path.append("path")
 	.attr("class", "line")
 	.style("stroke", function(d) { return color(d.name); })
-	.attr("d", function(d,i) { return dataline[i](d.values); })
+	.attr("d", function(d,i) { return dataline[d.name](d.values); })
 	.attr("transform", function(d, i) { return("translate(0," + (h/nchannels * i)  + ")"); });
 
     tick();
@@ -112,7 +114,7 @@ window.addEventListener('load', function() {
 	}
 
 	path.selectAll("path")
-	    .attr("d", function(d,i) { return dataline[i](d.values); });
+	    .attr("d", function(d,i) { return dataline[d.name](d.values); });
 
 	path.transition()
 	    .duration(0)
