@@ -1,0 +1,13 @@
+{
+    "name": "EmotivTest",
+    "version": "0.0.0",
+    "description": "Emotiv Test",
+    "dependencies": {
+        "socket.io": "latest",
+        "express": "latest",
+	"underscore": "latest",
+	"moment" : "latest",
+	"jade": "latest"
+    },
+    "author": "Josh Moller-Mara"
+}
