@@ -1,41 +1,49 @@
-// Urn game
-// Joshua Moller-Mara
-// 2014
+// EEG Visualization
+
 window.onload = function() {
+    // This is how we'll communicate with the Node.js server
     var socket = io.connect('/', {
 	'reconnect': true,
 	'reconnection delay': 500,
 	'max reconnection attempts': 100
     });
+
+    // Here we receive data of the format of something like:
+    // {"F3" :4505.34,
+    //  "FC6":1592.22,
+    //  "P7" :6375,
+    //  "T8" :8116.14,
+    //  "F7" :4936.29,
+    //  "F8" :2235.33,
+    //  "T7" :8208.45,
+    //  "P8" :6806.97,
+    //  "AF4":6066.45,
+    //  "F4" :2110.38,
+    //  "AF3":2064.02,
+    //  "O2" :1646.28,
+    //  "O1" :2889.15,
+    //  "FC5":4991.88}
+
+    // Where the key is the name of the channel, and the value is,
+    // well, the value
     socket.on('newData', function(d) { 
-	netUpdate(d);
+	graphUpdate(d);
 	});
 };
 
+// There are 14 channels that the Epoc provides
 var nchannels = 14;
+
 var alldata = d3.range(nchannels).map(function(i) {
     return({"name": i,
 	    "values": d3.range(200).map(function(x) {return(x*i);})
 	   }); 
 } );
 
-var netgraph;
-
-var nt = 0;
-var netdata = d3.range(200).map(function(x) {return(x*2);});
-var netdataup = d3.range(200).map(function(x) {return(x);});
-var oldmin = 0;
-var oldmax = 1;
-
+var eeggraph;
 var color;
-var line;
 
-function netUpdate(d) {
-    var up = d.F3;
-    // netdata.shift();
-    netdataup.shift();
-    // netdata.push(down);
-    netdataup.push(up);
+function graphUpdate(d) {
     var keys = Object.keys(d);
     for (var i = 0; i < alldata.length; i++) {
 	alldata[i].values.shift();
@@ -53,16 +61,8 @@ window.addEventListener('load', function() {
 	h = 800;
 
     var x = d3.scale.linear()
-	.domain([0, netdata.length - 1])
+	.domain([0, alldata[0].values.length - 1])
 	.range([0, w]);
-
-    var y = d3.scale.linear()
-	.domain([0, 3000])
-	.rangeRound([h/nchannels, 0]);
-
-    var y2 = d3.scale.linear()
-	.domain([0, 3000])
-	.rangeRound([h, h/2]);
 
     var datay = d3.range(nchannels).map(function(i) {
 	return(d3.scale.linear()
@@ -70,48 +70,26 @@ window.addEventListener('load', function() {
 	    .rangeRound([h/nchannels, 0]));
     });
 
-    var dataline = d3.range(nchannels).map(function(i) {
+    var dataline = d3.range(nchannels).map(function(j) {
 	return(d3.svg.line()
 	.x(function(d, i) { return x(i); })
-	.y(function(d, i) { return datay[i](d); }));
+	.y(function(d, i) { return datay[j](d); }));
     });
 
-    netgraph = d3.select("#netgraph").append("svg")
+    eeggraph = d3.select("#eeggraph").append("svg")
 	.attr("class", "chart")
 	.attr("width", w)
 	.attr("height", h);
 
-    netgraph.append("defs").append("clipPath")
+    eeggraph.append("defs").append("clipPath")
     	.attr("id", "clip")
     	.append("rect")
     	.attr("width", w)
     	.attr("height", h);
 
-    line = d3.svg.line()
-	.x(function(d, i) { return x(i); })
-	.y(function(d, i) { return y(d); });
-
-    var line2 = d3.svg.line()
-	.x(function(d, i) { return x(i); })
-	.y(function(d, i) { return y2(d); });
-
-
-    // var line = d3.svg.line()
-    // 	.interpolate("basis")
-    // 	.x(function(d) { return x(d.t); })
-    // 	.y(function(d) { return y(d.value); });
-
-    // var path = netgraph.append("g")
-    // 	.attr("clip-path", "url(#clip)")
-    // 	.append("path")
-    // 	.datum(netdata)
-    // 	.attr("class", "line")
-    // 	.style("stroke", "blue")
-    // 	.attr("d", line);
-
 
     color = d3.scale.category10();
-    path = netgraph.selectAll(".eegline")
+    path = eeggraph.selectAll(".eegline")
 	.data(alldata)
 	.enter()
 	.append("g")
@@ -127,10 +105,11 @@ window.addEventListener('load', function() {
 
     function tick() {
 	// redraw the line, and slide it to the left
-	oldmin = d3.min(netdataup.concat(netdata));
-	oldmax = d3.max(netdataup.concat(netdata));
-	y.domain([oldmin, oldmax]);
-	y2.domain([oldmin, oldmax]);
+	for (var i = 0; i < alldata.length; i++) {
+	    var newmin = d3.min(alldata[i].values);
+	    var newmax = d3.max(alldata[i].values);
+	    datay[i].domain([newmin, newmax]);
+	}
 
 	path.selectAll("path")
 	    .attr("d", function(d,i) { return dataline[i](d.values); });
